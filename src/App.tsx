@@ -2,10 +2,13 @@ import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ImageUpload } from './components/ImageUpload';
 import { generateBlogPost, BlogPostParams, generateImage } from './services/gemini';
-import { Loader2, Copy, Check, Sparkles, FileText, Target, MousePointerClick, Database, ShieldAlert, Image as ImageIcon, BookOpen, Download, Hash } from 'lucide-react';
+import { Loader2, Copy, Check, Sparkles, FileText, Target, MousePointerClick, Database, ShieldAlert, Image as ImageIcon, BookOpen, Download, Hash, Key } from 'lucide-react';
 import { COLOR_THEMES } from './constants';
 
 export default function App() {
+  // 1. API 키를 저장할 상태 추가
+  const [userApiKey, setUserApiKey] = useState<string>('');
+  
   const [formData, setFormData] = useState<Omit<BlogPostParams, 'images'>>({
     postType: '브랜드 블로그',
     topic: '',
@@ -40,13 +43,21 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 2. API 키 체크
+    if (!userApiKey) {
+      alert('구글 Gemini API 키를 입력해주세요.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setGeneratedContent(null);
     setGeneratedImages([]);
 
     try {
-      const content = await generateBlogPost({ ...formData, images });
+      // 3. API 호출 시 키를 파라미터로 전달
+      const content = await generateBlogPost({ ...formData, images }, userApiKey);
       setGeneratedContent(content);
       
       // Automatically generate images if prompts exist
@@ -54,7 +65,7 @@ export default function App() {
         setImageLoading(true);
         // Generate images sequentially to avoid rate limits or parallel if quota allows.
         // Let's try parallel for speed, but limit to 3.
-        const imagePromises = content.prompts.slice(0, 3).map(prompt => generateImage(prompt));
+        const imagePromises = content.prompts.slice(0, 3).map(prompt => generateImage(prompt, userApiKey));
         const newImages = await Promise.all(imagePromises);
         setGeneratedImages(newImages);
         setImageLoading(false);
@@ -139,6 +150,21 @@ export default function App() {
           <p className="mt-3 max-w-md mx-auto text-base text-gray-200 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl drop-shadow-md">
             스마트블록 상위 노출을 위한 전략적 콘텐츠 생성 및 진단 도구
           </p>
+        </div>
+
+        {/* 상단에 API 키 입력 섹션 추가 */}
+        <div className="max-w-md mx-auto mb-8 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+          <label className="block text-xs font-medium text-white/80 mb-2 flex items-center gap-2">
+            <Key className="w-3 h-3" /> Gemini API Key
+          </label>
+          <input
+            type="password"
+            placeholder="AI Studio에서 발급받은 키를 입력하세요"
+            className="w-full bg-white/20 border-white/30 text-white placeholder:text-white/50 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+            value={userApiKey}
+            onChange={(e) => setUserApiKey(e.target.value)}
+          />
+          <p className="mt-2 text-[10px] text-white/40">키는 브라우저 메모리에만 저장되며 서버로 전송되지 않습니다.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

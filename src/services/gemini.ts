@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { AGENT_N_PROMPT_TEMPLATE } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAiInstance = (apiKey: string) => new GoogleGenAI({ apiKey });
 
 export interface BlogPostParams {
   postType: string;
@@ -15,8 +15,9 @@ export interface BlogPostParams {
   images: string[]; // Base64 strings
 }
 
-export async function generateBlogPost(params: BlogPostParams): Promise<{ html: string; report: string; prompts: string[]; hashtags: string }> {
+export async function generateBlogPost(params: BlogPostParams, apiKey: string): Promise<{ html: string; report: string; prompts: string[]; hashtags: string }> {
   const { postType, topic, targetPersona, cta, keyInfo, tone, evidenceAssets, existingContent, images } = params;
+  const ai = getAiInstance(apiKey);
 
   // Replace placeholders in the prompt template
   let prompt = AGENT_N_PROMPT_TEMPLATE
@@ -92,7 +93,8 @@ export async function generateBlogPost(params: BlogPostParams): Promise<{ html: 
   }
 }
 
-export async function generateImage(prompt: string): Promise<string> {
+export async function generateImage(prompt: string, apiKey: string): Promise<string> {
+  const ai = getAiInstance(apiKey);
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
