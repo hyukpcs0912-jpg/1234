@@ -1,0 +1,5 @@
+{
+  "name": "@Naver Blog Post Generator 기본형(배포용)",
+  "description": "Generate SEO-optimized Naver Blog posts from images and keywords.",
+  "requestFramePermissions": []
+}
