@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ImageUpload } from './components/ImageUpload';
 import { generateBlogPost, BlogPostParams, generateImage } from './services/gemini';
@@ -8,6 +8,17 @@ import { COLOR_THEMES } from './constants';
 export default function App() {
   // 1. API 키를 저장할 상태 추가
   const [userApiKey, setUserApiKey] = useState<string>('');
+
+  useEffect(() => {
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) setUserApiKey(savedKey);
+  }, []);
+
+  const handleKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setUserApiKey(newKey);
+    localStorage.setItem('gemini_api_key', newKey); // 입력 즉시 저장
+  };
   
   const [formData, setFormData] = useState<Omit<BlogPostParams, 'images'>>({
     postType: '브랜드 블로그',
@@ -162,7 +173,7 @@ export default function App() {
             placeholder="AI Studio에서 발급받은 키를 입력하세요"
             className="w-full bg-white/20 border-white/30 text-white placeholder:text-white/50 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             value={userApiKey}
-            onChange={(e) => setUserApiKey(e.target.value)}
+            onChange={handleKeyChange}
           />
           <p className="mt-2 text-[10px] text-white/40">키는 브라우저 메모리에만 저장되며 서버로 전송되지 않습니다.</p>
         </div>
